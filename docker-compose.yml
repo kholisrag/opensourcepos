@@ -32,14 +32,7 @@ services:
         volumes:
           - uploads:/app/public/uploads
           - logs:/app/application/logs
-        environment:
-          - CI_ENV=${OSPOS_CI_ENV}
-          - FORCE_HTTPS=true
-          - PHP_TIMEZONE=UTC
-          - MYSQL_USERNAME=${OSPOS_MYSQL_USERNAME}
-          - MYSQL_PASSWORD=${OSPOS_MYSQL_PASSWORD}
-          - MYSQL_DB_NAME=ospos
-          - MYSQL_HOST_NAME=mysql
+        env_file: common.env
 
     mysql:
         image: mariadb:10.3
@@ -51,11 +44,9 @@ services:
           - db_net
         volumes_from:
           - sqlscript
-        environment:
-          - MYSQL_ROOT_PASSWORD=${OSPOS_MYSQL_ROOT_PASSWORD}
-          - MYSQL_DATABASE=ospos
-          - MYSQL_USER=${OSPOS_MYSQL_USERNAME}
-          - MYSQL_PASSWORD=${OSPOS_MYSQL_PASSWORD}
+        volumes: 
+          - ./database/docker_mysql.cnf:/etc/mysql/conf.d/docker_mysql.cnf
+        env_file: common.env
 
     phpmyadmin:
         image: phpmyadmin/phpmyadmin
@@ -68,10 +59,7 @@ services:
         networks:
           - app_net
           - db_net
-        environment:
-          - MYSQL_USERNAME=${OSPOS_MYSQL_USERNAME}
-          - MYSQL_ROOT_PASSWORD=${OSPOS_MYSQL_ROOT_PASSWORD}
-          - PMA_HOST=mysql
+        env_file: common.env
 
     nginx:
         image: nginx:1.15-alpine
@@ -92,9 +80,7 @@ services:
           - "8000:8000"
         networks:
           - app_net
-        environment:
-          - WEB_DOMAIN=${OSPOS_DOMAIN_NAME}
-          - ESC=$$
+        env_file: common.env
         command: "/bin/sh -c 'envsubst < /etc/nginx/nginx.tmpl > /etc/nginx/nginx.conf & while :; do sleep 6h & wait $${!}; nginx -s reload; done & nginx -g \"daemon off;\"'"
 
     certbot:
